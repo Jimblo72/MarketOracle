@@ -201,6 +201,11 @@
   .toast-info{background:#0a1a2a;border:1px solid var(--accent);color:var(--accent);}
   @keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
 
+  /* Recommendation tabs */
+  .rec-tab{padding:7px 14px;font-family:var(--sans);font-size:12px;font-weight:600;color:var(--muted);background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;transition:all .2s;white-space:nowrap;margin-bottom:-1px;}
+  .rec-tab:hover{color:var(--text);}
+  .rec-tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+
   /* Scanner tabs */
   .scanner-tab{padding:8px 18px;font-family:var(--sans);font-size:13px;font-weight:600;color:var(--muted);background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;transition:all .2s;letter-spacing:.3px;margin-bottom:-1px;}
   .scanner-tab:hover{color:var(--text);}
@@ -660,15 +665,29 @@
   <!-- TOP 20 RECOMMENDATIONS -->
   <div class="card" style="margin-bottom:18px;border-color:rgba(0,229,255,.2);background:linear-gradient(135deg,rgba(0,229,255,.03),rgba(155,114,255,.02));">
     <div class="card-header">
-      <div class="card-title">◆ Top 20 rekommendationer</div>
-      <div style="display:flex;gap:8px;align-items:center;">
+      <div class="card-title">◆ Rekommendationer</div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
         <span class="badge b-muted" id="top20-source">Kör analys för att fylla listan</span>
         <button class="btn btn-ghost btn-sm" onclick="collectTopRecommendations()" id="btn-refresh-top20">↻ Uppdatera</button>
       </div>
     </div>
-    <div style="font-size:11px;color:var(--muted);margin-bottom:14px;">
-      Sorterat på <strong style="color:var(--text);">EV-score</strong> = förväntad avkastning × (1 − riskvikt). Hämtar signals från Value Scanner, Safe Yield, Sport och Nya Spel.
+
+    <!-- Category tabs -->
+    <div style="display:flex;gap:2px;margin-bottom:14px;border-bottom:1px solid var(--border);overflow-x:auto;" id="rec-tabs">
+      <button class="rec-tab active" onclick="recTab('all',this)">★ Alla <span id="rtc-all" class="badge b-muted" style="font-size:9px;padding:1px 5px;margin-left:3px;">0</span></button>
+      <button class="rec-tab" onclick="recTab('polymarket',this)">⬡ Value Bets <span id="rtc-polymarket" class="badge b-muted" style="font-size:9px;padding:1px 5px;margin-left:3px;">0</span></button>
+      <button class="rec-tab" onclick="recTab('safeyield',this)">🛡 Safe Yield <span id="rtc-safeyield" class="badge b-muted" style="font-size:9px;padding:1px 5px;margin-left:3px;">0</span></button>
+      <button class="rec-tab" onclick="recTab('sport',this)">⚽ Sport <span id="rtc-sport" class="badge b-muted" style="font-size:9px;padding:1px 5px;margin-left:3px;">0</span></button>
+      <button class="rec-tab" onclick="recTab('euedge',this)">🇪🇺 EU Edge <span id="rtc-euedge" class="badge b-muted" style="font-size:9px;padding:1px 5px;margin-left:3px;">0</span></button>
     </div>
+
+    <!-- Source status -->
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;" id="rec-source-status"></div>
+
+    <div style="font-size:11px;color:var(--muted);margin-bottom:14px;">
+      Sorterat på <strong style="color:var(--text);">EV-score</strong> = förväntad avkastning × (1 − riskvikt). Kör alla scanners för att fylla varje kategori.
+    </div>
+
     <div id="top20-list">
       <div style="padding:24px;text-align:center;color:var(--muted);font-size:13px;">
         Kör AI-analys (Översikt) eller Safe Yield-scan (Value Scanner) för att fylla listan automatiskt.
@@ -1617,41 +1636,46 @@ function collectTopRecommendations() {
   renderTop20(S.topRecs, valid.length);
 }
 
-function renderTop20(recs, total) {
-  const el = document.getElementById('top20-list');
-  const src = document.getElementById('top20-source');
-  src.textContent = `${recs.length} av ${total} signals · uppdaterad ${new Date().toLocaleTimeString('sv-SE',{hour:'2-digit',minute:'2-digit'})}`;
-  src.className = 'badge b-accent';
+// =================== REC TABS ===================
+S.recFilter = 'all';
 
-  if (!recs.length) {
-    el.innerHTML = '<div style="padding:24px;text-align:center;color:var(--muted);font-size:13px;">Inga rekommendationer ännu — kör analys.</div>';
+function recTab(filter, btn) {
+  S.recFilter = filter;
+  document.querySelectorAll('.rec-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderTop20(S.topRecs, null);
+}
+
+function renderTop20(recs, total) {
+  const el  = document.getElementById('top20-list');
+  const src = document.getElementById('top20-source');
+  if (!recs || !recs.length) {
+    if(el) el.innerHTML = '<div style="padding:24px;text-align:center;color:var(--muted);font-size:13px;">Inga rekommendationer ännu — kör analys.</div>';
+    updateRecCounts([]);
     return;
   }
-
-  el.innerHTML = recs.map((r, i) => {
-    const rankColor = i === 0 ? 'var(--accent2)' : i < 3 ? 'var(--green)' : i < 10 ? 'var(--accent)' : 'var(--muted)';
+  updateRecCounts(recs);
+  updateSourceStatus();
+  let filtered = recs;
+  if (S.recFilter === 'polymarket') filtered = recs.filter(r => r.type === 'polymarket' && r.typeLabel !== 'EU Edge' && r.typeLabel !== 'Korsanalys');
+  else if (S.recFilter === 'safeyield') filtered = recs.filter(r => r.type === 'safeyield');
+  else if (S.recFilter === 'sport')     filtered = recs.filter(r => r.type === 'sport');
+  else if (S.recFilter === 'euedge')    filtered = recs.filter(r => r.typeLabel === 'EU Edge' || r.typeLabel === 'Korsanalys');
+  if(src){ src.textContent = `${filtered.length} signals · ${new Date().toLocaleTimeString('sv-SE',{hour:'2-digit',minute:'2-digit'})}`; src.className = 'badge b-accent'; }
+  if (!filtered.length) {
+    const hints = { polymarket:'Kör ◆ Kör AI-analys från Översikten', safeyield:'Kör ⚡ Skanna Safe Yield i Value Scanner', sport:'Kör ⚽ Hämta odds i Nya Spel → Sport Odds', euedge:'Kör ↻ Hämta nya + ◆ AI-analysera i Nya Spel → Upptäck nya' };
+    if(el) el.innerHTML = `<div style="padding:24px;text-align:center;color:var(--muted);font-size:13px;">Inga rekommendationer i denna kategori.<br><span style="color:var(--accent);font-size:12px;margin-top:6px;display:inline-block;">${hints[S.recFilter]||'Kör fler analyser.'}</span></div>`;
+    return;
+  }
+  if(el) el.innerHTML = filtered.map((r, i) => {
+    const globalRank = recs.indexOf(r) + 1;
+    const rankColor = globalRank === 1 ? 'var(--accent2)' : globalRank < 4 ? 'var(--green)' : globalRank < 11 ? 'var(--accent)' : 'var(--muted)';
     const riskColor = r.risk === 'Minimal' || r.risk === 'Låg' ? 'var(--green)' : r.risk === 'Låg-medel' ? 'var(--accent2)' : 'var(--red)';
-    const returnStr = r.annualized
-      ? `${r.annualized.toFixed(1)}% / år`
-      : `+${r.returnPct?.toFixed(1)||'?'}%`;
-    const evStr = r.evScore.toFixed(1);
+    const returnStr = r.annualized ? `${r.annualized.toFixed(1)}% / år` : `+${r.returnPct?.toFixed(1)||'?'}%`;
     const matchTime = r.matchTime ? ' · ' + new Date(r.matchTime).toLocaleDateString('sv-SE',{weekday:'short',day:'numeric',month:'short'}) : '';
     const endStr = r.daysLeft ? ` · ${r.daysLeft} dagar kvar` : '';
-
-    // Pre-fill bet form data
-    const betData = encodeURIComponent(JSON.stringify({
-      type: r.type,
-      market: r.market,
-      outcome: r.outcome,
-      book: r.platform
-    }));
-
-    return `<div style="display:grid;grid-template-columns:32px 1fr auto;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid rgba(30,45,64,.5);" onmouseover="this.style.background='rgba(255,255,255,.02)'" onmouseout="this.style.background=''">
-
-      <!-- Rank -->
-      <div style="font-family:var(--mono);font-size:16px;font-weight:700;color:${rankColor};text-align:center;">${i+1}</div>
-
-      <!-- Main info -->
+    return `<div style="display:grid;grid-template-columns:32px 1fr auto;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid rgba(30,45,64,.5);">
+      <div style="font-family:var(--mono);font-size:16px;font-weight:700;color:${rankColor};text-align:center;">${globalRank}</div>
       <div>
         <div style="display:flex;gap:6px;align-items:center;margin-bottom:4px;flex-wrap:wrap;">
           <span class="chip ${r.typeBadge}" style="font-size:9px;">${r.typeLabel}</span>
@@ -1663,17 +1687,31 @@ function renderTop20(recs, total) {
           <span style="font-size:12px;">Avk: <strong class="up">${returnStr}</strong></span>
           <span style="font-size:12px;">Risk: <strong style="color:${riskColor};">${r.risk}</strong></span>
           <span style="font-size:12px;">Conf: <strong style="color:var(--accent);">${r.confidence}</strong></span>
-          <span style="font-family:var(--mono);font-size:11px;color:var(--muted);">EV ${evStr}</span>
+          <span style="font-family:var(--mono);font-size:11px;color:var(--muted);">EV ${r.evScore.toFixed(1)}</span>
         </div>
       </div>
-
-      <!-- Action -->
-      <button class="btn btn-primary btn-sm" onclick='quickAddBet(${JSON.stringify(JSON.stringify(r))})' style="white-space:nowrap;font-size:11px;">
-        + Lägg bet
-      </button>
+      <button class="btn btn-primary btn-sm" onclick='quickAddBet(${JSON.stringify(JSON.stringify(r))})' style="white-space:nowrap;font-size:11px;">+ Lägg bet</button>
     </div>`;
   }).join('');
 }
+
+function updateRecCounts(recs) {
+  const counts = { all: recs.length, polymarket: recs.filter(r=>r.type==='polymarket'&&r.typeLabel!=='EU Edge'&&r.typeLabel!=='Korsanalys').length, safeyield: recs.filter(r=>r.type==='safeyield').length, sport: recs.filter(r=>r.type==='sport').length, euedge: recs.filter(r=>r.typeLabel==='EU Edge'||r.typeLabel==='Korsanalys').length };
+  Object.entries(counts).forEach(([k,v]) => { const el=document.getElementById('rtc-'+k); if(!el)return; el.textContent=v; el.className=v>0?'badge b-accent':'badge b-muted'; el.style.fontSize='9px'; el.style.padding='1px 5px'; el.style.marginLeft='3px'; });
+}
+
+function updateSourceStatus() {
+  const el = document.getElementById('rec-source-status');
+  if (!el) return;
+  const sources = [
+    {label:'Value Bets',icon:'⬡',hasData:S.scannerResults?.length>0},
+    {label:'Safe Yield',icon:'🛡',hasData:S.safeYieldData?.length>0},
+    {label:'Sport',     icon:'⚽',hasData:S.sportMatches?.length>0},
+    {label:'EU Edge',   icon:'🇪🇺',hasData:S.nmAiPicks?.length>0||S.newMarkets?.length>0},
+  ];
+  el.innerHTML = sources.map(s=>`<span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;padding:3px 8px;border-radius:4px;background:${s.hasData?'rgba(0,200,122,.08)':'rgba(74,98,120,.15)'};border:1px solid ${s.hasData?'rgba(0,200,122,.2)':'var(--border)'};color:${s.hasData?'var(--green)':'var(--muted)'};">${s.icon} ${s.label} ${s.hasData?'✓':'— kör scan'}</span>`).join('');
+}
+
 
 function quickAddBet(rJson) {
   const r = JSON.parse(rJson);
