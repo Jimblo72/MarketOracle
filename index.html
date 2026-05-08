@@ -3734,8 +3734,10 @@ function processOddsData(data){
       return{name,bookOdds:bk,maxOdds:mx,minOdds:mn,avgOdds:avg,impliedProb:1/avg*100,bestBook:bk.find(b=>b.price===mx),worstBook:bk.find(b=>b.price===mn),spread};
     });
     const sbSum=outcomes.reduce((s,o)=>s+(1/o.maxOdds),0);
-    const isSureBet=sbSum<1.0&&outcomes.length>=2;
-    return{id:ev.id,homeTeam:ev.home_team,awayTeam:ev.away_team,commenceTime:ev.commence_time,sport:ev.sport_title,outcomes,valueBets:outcomes.filter(o=>o.spread>=minEdge),isSureBet,sureBetProfit:isSureBet?((1/sbSum-1)*100).toFixed(2):null,sureBetSum:sbSum,bookCount:books.length};
+    const rawProfit=sbSum<1.0?(1/sbSum-1)*100:0;
+    // Real sure bets: 0.5–3% is realistic. >5% almost certainly bad/stale data.
+    const isSureBet=sbSum<1.0&&sbSum>0.5&&rawProfit<5.0&&outcomes.length>=2;
+    return{id:ev.id,homeTeam:ev.home_team,awayTeam:ev.away_team,commenceTime:ev.commence_time,sport:ev.sport_title,outcomes,valueBets:outcomes.filter(o=>o.spread>=minEdge),isSureBet,sureBetProfit:isSureBet?rawProfit.toFixed(2):null,sureBetSum:sbSum,bookCount:books.length};
   });
 }
 
@@ -3759,7 +3761,9 @@ function renderSportResults(){
   if(S.spFilter==='sure')ms=ms.filter(m=>m.isSureBet);
   ms.sort((a,b)=>(b.isSureBet-a.isSureBet)||b.valueBets.length-a.valueBets.length);
   if(!ms.length){document.getElementById('sp-results').innerHTML='<div class="card"><div style="padding:24px;text-align:center;color:var(--muted);">Inga matcher matchar filtret</div></div>';return;}
-  document.getElementById('sp-results').innerHTML=ms.map(m=>renderSportCard(m)).join('');
+  const hasMock = ms.some(m=>m.isMock);
+  const mockWarning = hasMock ? `<div style="background:rgba(240,165,0,.07);border:1px solid rgba(240,165,0,.2);border-radius:8px;padding:10px 16px;margin-bottom:14px;font-size:12px;color:var(--accent2);">⚠ Visar exempeldata — sure bets och value bets i mockdata är <strong>ej reella</strong>. Lägg till Odds API-nyckel för riktiga odds.</div>` : '';
+  document.getElementById('sp-results').innerHTML = mockWarning + ms.map(m=>renderSportCard(m)).join('');
 }
 
 function renderSportCard(m){
@@ -3880,8 +3884,10 @@ function getMockSportData(sport){
       return{name:od.name,bookOdds:bk,maxOdds:mx,minOdds:mn,avgOdds:avg,impliedProb:1/avg*100,bestBook:bk.find(b=>b.price===mx),worstBook:bk.find(b=>b.price===mn),spread};
     });
     const sbSum=outcomes.reduce((s,o)=>s+(1/o.maxOdds),0);
-    const isSureBet=sbSum<1.0;
-    return{id:`mock-${i}`,homeTeam:m.home,awayTeam:m.away,commenceTime:dt.toISOString(),sport:sport2,outcomes,valueBets:outcomes.filter(o=>o.spread>=minEdge),isSureBet,sureBetProfit:isSureBet?((1/sbSum-1)*100).toFixed(2):null,sureBetSum:sbSum,bookCount:m.books.length};
+    // Validate: real sure bets are typically 0.5-3% profit. >5% = almost certainly bad data
+    const rawProfit = sbSum < 1.0 ? (1/sbSum-1)*100 : 0;
+    const isSureBet = sbSum < 1.0 && sbSum > 0.5 && rawProfit < 5.0; // sanity check
+    return{id:`mock-${i}`,homeTeam:m.home,awayTeam:m.away,commenceTime:dt.toISOString(),sport:sport2,outcomes,valueBets:outcomes.filter(o=>o.spread>=minEdge),isSureBet,sureBetProfit:isSureBet?rawProfit.toFixed(2):null,sureBetSum:sbSum,bookCount:m.books.length,isMock:true};
   });
 }
 
