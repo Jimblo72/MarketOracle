@@ -1234,6 +1234,14 @@
       <label class="form-label">Value scanner — minsta edge (%)</label>
       <input class="form-input" id="s-min-edge" type="number" value="8" style="max-width:120px;">
     </div>
+    <div class="form-group">
+      <label class="form-label">Sektoranalys</label>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <span id="cached-analysis-status" style="font-size:12px;color:var(--muted);">—</span>
+        <button class="btn btn-ghost btn-sm" onclick="clearCachedAnalysis()">↺ Rensa & kör ny analys</button>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-top:4px;">Senaste analys sparas automatiskt. Klicka bara "Kör AI-analys" i Översikten för att uppdatera.</div>
+    </div>
 
     <button class="btn btn-primary" style="width:100%;margin-top:4px;" onclick="saveSettings()">💾 Spara inställningar</button>
   </div>
@@ -1298,6 +1306,14 @@ document.addEventListener('DOMContentLoaded', () => {
   setInterval(updateClock, 1000);
   renderBankroll();
   fetchMarkets();
+  // Restore cached analysis so sectors don't reset between sessions
+  const cachedAnalysis = localStorage.getItem('mo_analysis');
+  if (cachedAnalysis) {
+    try {
+      S.analysis = JSON.parse(cachedAnalysis);
+      applyAnalysis(S.analysis);
+    } catch(e) { console.warn('Could not restore cached analysis'); }
+  }
   updateSectorChips();
   checkResolvedBets();
   setInterval(checkResolvedBets, 30 * 60 * 1000);
@@ -2639,7 +2655,7 @@ Returnera ENDAST JSON, inga förklaringar utanför JSON-objektet.`;
 
     const json = JSON.parse(rawText.substring(start, end+1));
     S.analysis = json;
-
+    localStorage.setItem('mo_analysis', JSON.stringify(json));
     applyAnalysis(json);
     updateSectorChips();
     collectTopRecommendations();
@@ -3989,6 +4005,33 @@ function filterBets(f) {
   const active = document.getElementById('bf-' + f);
   if (active) active.classList.add('active');
   renderBankroll();
+}
+
+// =================== ANALYSIS CACHE ===================
+function clearCachedAnalysis() {
+  localStorage.removeItem('mo_analysis');
+  S.analysis = null;
+  // Reset sector display
+  document.getElementById('stat-climate').textContent = '—';
+  document.getElementById('stat-climate-sub').textContent = 'Inväntar analys';
+  document.getElementById('dash-sectors').innerHTML = '<div style="color:var(--muted);font-size:12px;padding:8px 0;">Kör analys för sektorbedömning</div>';
+  document.getElementById('sectors-content').innerHTML = '<div class="card"><div style="padding:30px;text-align:center;color:var(--muted);font-size:13px;">Kör en AI-analys från Översikten för att generera sektorbedömningar.</div></div>';
+  updateSectorChips();
+  toast('Cachad analys rensad — kör ny AI-analys från Översikten', 'info');
+}
+
+// Update cached status in settings
+function updateCachedStatus() {
+  const el = document.getElementById('cached-analysis-status');
+  if (!el) return;
+  const cached = localStorage.getItem('mo_analysis');
+  if (cached && S.analysis?.klimat) {
+    el.textContent = `Sparad: ${S.analysis.klimat} · ${S.analysis.uppdaterad || '—'}`;
+    el.style.color = 'var(--green)';
+  } else {
+    el.textContent = 'Ingen cachad analys';
+    el.style.color = 'var(--muted)';
+  }
 }
 
 // =================== FORMAT HELPERS ===================

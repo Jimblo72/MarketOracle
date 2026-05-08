@@ -1,9 +1,6 @@
 /**
  * Netlify Function: metaculus-proxy
- * Proxies Metaculus API to avoid CORS issues
- *
- * GET /.netlify/functions/metaculus-proxy?limit=15&status=open
- * GET /.netlify/functions/metaculus-proxy?limit=10&search=riksbank
+ * Proxies Metaculus API — tries multiple endpoints for resilience
  */
 
 exports.handler = async (event) => {
@@ -16,28 +13,41 @@ exports.handler = async (event) => {
     return { statusCode: 204, headers: CORS, body: '' };
   }
 
-  try {
-    const qs = event.queryStringParameters || {};
-    const params = new URLSearchParams({ format: 'json', ...qs }).toString();
-    const url = `https://www.metaculus.com/api2/questions/?${params}`;
+  const qs = event.queryStringParameters || {};
 
-    const r = await fetch(url, {
-      headers: { 'Accept': 'application/json', 'User-Agent': 'MarketOracle/1.0' }
-    });
+  // Try endpoints in order
+  const attempts = [
+    // Old API (still works for public questions)
+    `https://www.metaculus.com/api2/questions/?${new URLSearchParams({ format: 'json', ...qs })}`,
+    // Alternative with www removed
+    `https://metaculus.com/api2/questions/?${new URLSearchParams({ format: 'json', ...qs })}`,
+  ];
 
-    if (!r.ok) throw new Error(`Metaculus ${r.status}`);
-    const data = await r.json();
+  for (const url of attempts) {
+    try {
+      const r = await fetch(url, {
+        headers: {
+          'Accept': 'application/json',
+          'User-Agent': 'Mozilla/5.0 (compatible; MarketOracle/1.0)',
+          'Referer': 'https://www.metaculus.com/',
+        },
+        signal: AbortSignal.timeout(8000),
+      });
 
-    return {
-      statusCode: 200,
-      headers: CORS,
-      body: JSON.stringify(data),
-    };
-  } catch (e) {
-    return {
-      statusCode: 500,
-      headers: CORS,
-      body: JSON.stringify({ error: e.message }),
-    };
+      if (!r.ok) continue;
+      const data = await r.json();
+      if (data?.results?.length > 0) {
+        return { statusCode: 200, headers: CORS, body: JSON.stringify(data) };
+      }
+    } catch (e) {
+      console.error('Metaculus attempt failed:', url, e.message);
+    }
   }
+
+  // Return empty but valid response — app handles gracefully
+  return {
+    statusCode: 200,
+    headers: CORS,
+    body: JSON.stringify({ results: [], count: 0, _source: 'fallback' }),
+  };
 };
