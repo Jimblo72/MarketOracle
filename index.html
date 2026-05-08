@@ -583,6 +583,44 @@
     </div>
   </div>
 
+  <!-- Stock search & watchlist -->
+  <div class="g2" style="margin-bottom:18px;">
+
+    <!-- Free text search -->
+    <div class="card" style="margin-bottom:0;border-color:rgba(0,229,255,.15);">
+      <div class="card-header">
+        <div class="card-title">🔍 Fråga om en aktie</div>
+        <span class="badge b-accent">AI-bedömning</span>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:12px;">
+        <input class="form-input" id="stock-query" placeholder="t.ex. Cloudflare, NVIDIA, Hexagon, NET..." onkeydown="if(event.key==='Enter') analyzeStockQuery()" style="flex:1;">
+        <button class="btn btn-primary" onclick="analyzeStockQuery()" id="btn-stock-query" style="white-space:nowrap;">◆ Analysera</button>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;">
+        <span style="font-size:11px;color:var(--muted);align-self:center;">Snabbval:</span>
+        <button class="nm-filter" onclick="quickStock('Cloudflare NET')">☁ Cloudflare</button>
+        <button class="nm-filter" onclick="quickStock('NVIDIA NVDA')">🤖 NVIDIA</button>
+        <button class="nm-filter" onclick="quickStock('ASML Holding')">🔬 ASML</button>
+        <button class="nm-filter" onclick="quickStock('Hexagon HEXA-B')">📐 Hexagon</button>
+        <button class="nm-filter" onclick="quickStock('Northvolt')">🔋 Northvolt</button>
+      </div>
+      <div id="stock-query-result" style="display:none;"></div>
+    </div>
+
+    <!-- Watchlist -->
+    <div class="card" style="margin-bottom:0;">
+      <div class="card-header">
+        <div class="card-title">👁 Bevakningslista</div>
+        <span class="badge b-muted" id="watchlist-count">0 aktier</span>
+      </div>
+      <div id="watchlist-content">
+        <div style="padding:16px;text-align:center;color:var(--muted);font-size:12px;">
+          Analysera en aktie och lägg till via "+ Bevaka"-knappen.
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Info / prompt to run macro first -->
   <div id="stocks-macro-prompt" class="card" style="border-color:rgba(0,229,255,.15);background:linear-gradient(135deg,rgba(0,229,255,.04),rgba(155,114,255,.02));margin-bottom:18px;">
     <div style="display:flex;gap:16px;align-items:flex-start;">
@@ -2090,10 +2128,179 @@ function renderStocks(json) {
     }).join('')}`;
 }
 
+// =================== STOCK SEARCH & WATCHLIST ===================
+S.watchlist = JSON.parse(localStorage.getItem('mo_watchlist') || '[]');
+
+function saveWatchlist() { localStorage.setItem('mo_watchlist', JSON.stringify(S.watchlist)); }
+
+function quickStock(q) {
+  document.getElementById('stock-query').value = q;
+  analyzeStockQuery();
+}
+
+async function analyzeStockQuery() {
+  const key = S.settings.claude;
+  if (!key) { toast('Lägg till Claude API-nyckel i Inställningar', 'err'); return; }
+  const query = document.getElementById('stock-query').value.trim();
+  if (!query) return;
+
+  const btn = document.getElementById('btn-stock-query');
+  btn.innerHTML = '<span class="spinner"></span>';
+  btn.disabled = true;
+
+  const resultEl = document.getElementById('stock-query-result');
+  resultEl.style.display = 'block';
+  resultEl.innerHTML = `<div style="padding:16px;text-align:center;color:var(--muted);"><div class="spinner"></div> Analyserar ${query}…</div>`;
+
+  const klimat = S.analysis?.klimat || 'Neutral';
+  const prompt = `Du är en aktiestrateg. Analysera följande aktie/bolag och ge en kort investeringsbedömning på svenska.
+
+Aktie/bolag att analysera: "${query}"
+Rådande makroklimat: ${klimat}
+
+Returnera ENDAST JSON:
+{
+  "ticker": "TICKERSYMBOL",
+  "namn": "Bolagsnamn",
+  "bors": "Börs",
+  "land": "Landskod",
+  "sektor": "Sektor",
+  "signal": "KÖP/HÅLL/AVVAKTA/SÄLJ",
+  "uppside": "+X%",
+  "risk": "Låg/Medel/Hög",
+  "confidence": "Hög/Medel/Låg",
+  "pe_estimat": "XxE",
+  "kurs_estimat": "Nuv. kurs",
+  "tes": "2-3 meningar om investeringstesen",
+  "risker": "Viktigaste riskerna",
+  "makro_koppling": "Hur kopplar till rådande makroklimat",
+  "noterat": true
+}`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': key,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 800,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+    if (!res.ok) throw new Error((await res.json()).error?.message);
+    const data = await res.json();
+    let raw = data.content[0]?.text || '';
+    raw = raw.replace(/```json\n?/g,'').replace(/```\n?/g,'').trim();
+    const a = JSON.parse(raw.substring(raw.indexOf('{'), raw.lastIndexOf('}')+1));
+
+    const sigColor = a.signal === 'KÖP' ? 'var(--green)' : a.signal === 'SÄLJ' ? 'var(--red)' : 'var(--accent2)';
+    const sigPill  = a.signal === 'KÖP' ? 'pill-buy' : a.signal === 'SÄLJ' ? 'pill-sell' : 'pill-reduce';
+    const riskColor = a.risk === 'Låg' ? 'var(--green)' : a.risk === 'Hög' ? 'var(--red)' : 'var(--accent2)';
+    const alreadyWatching = S.watchlist.some(w => w.ticker === a.ticker);
+
+    resultEl.innerHTML = `
+      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:16px;">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:12px;flex-wrap:wrap;">
+          <div>
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+              <span style="font-family:var(--mono);font-size:13px;font-weight:700;color:var(--accent);background:var(--bg4);border:1px solid var(--border);padding:3px 8px;border-radius:4px;">${a.ticker||'—'}</span>
+              <span style="font-size:11px;color:var(--muted);">${a.land||''} · ${a.bors||''}</span>
+            </div>
+            <div style="font-size:16px;font-weight:800;color:#fff;">${a.namn||query}</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:2px;">${a.sektor||'—'}</div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
+            <span class="pill ${sigPill}" style="font-size:13px;padding:5px 12px;">${a.signal}</span>
+            ${a.uppside ? `<span style="font-family:var(--mono);font-size:14px;font-weight:700;color:var(--green);">${a.uppside} uppside</span>` : ''}
+          </div>
+        </div>
+        <div style="font-size:13px;color:var(--text);line-height:1.7;margin-bottom:10px;">${a.tes||'—'}</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px;">
+          ${a.pe_estimat ? `<span style="font-size:11px;background:var(--bg4);border:1px solid var(--border);border-radius:4px;padding:2px 7px;">P/E ${a.pe_estimat}</span>` : ''}
+          ${a.kurs_estimat ? `<span style="font-size:11px;background:var(--bg4);border:1px solid var(--border);border-radius:4px;padding:2px 7px;">${a.kurs_estimat}</span>` : ''}
+          <span style="font-size:11px;color:${riskColor};font-weight:700;">Risk: ${a.risk||'?'}</span>
+          <span style="font-size:11px;color:var(--accent);font-weight:700;">Conf: ${a.confidence||'?'}</span>
+        </div>
+        ${a.makro_koppling ? `<div style="background:rgba(0,229,255,.06);border:1px solid rgba(0,229,255,.15);border-radius:6px;padding:8px 12px;font-size:12px;color:var(--text);margin-bottom:10px;">🌐 Makro: ${a.makro_koppling}</div>` : ''}
+        ${a.risker ? `<div style="font-size:11px;color:rgba(255,77,109,.8);margin-bottom:12px;">⚠ ${a.risker}</div>` : ''}
+        <button onclick='addToWatchlist(${JSON.stringify(JSON.stringify(a))})' 
+          style="width:100%;padding:8px;background:${alreadyWatching ? 'var(--bg4)' : 'rgba(0,229,255,.08)'};border:1px solid ${alreadyWatching ? 'var(--border)' : 'rgba(0,229,255,.25)'};border-radius:6px;color:${alreadyWatching ? 'var(--muted)' : 'var(--accent)'};font-size:12px;font-weight:700;cursor:pointer;" 
+          ${alreadyWatching ? 'disabled' : ''}>
+          ${alreadyWatching ? '✓ Redan i bevakningslistan' : '+ Lägg till bevakningslista'}
+        </button>
+      </div>`;
+
+  } catch(e) {
+    resultEl.innerHTML = `<div style="padding:12px;color:var(--red);font-size:12px;">Fel: ${e.message}</div>`;
+    toast('Analysfel: ' + e.message, 'err');
+  }
+  btn.innerHTML = '◆ Analysera';
+  btn.disabled = false;
+}
+
+function addToWatchlist(aJson) {
+  const a = JSON.parse(aJson);
+  if (S.watchlist.some(w => w.ticker === a.ticker)) {
+    toast(`${a.ticker} finns redan i bevakningslistan`, 'info');
+    return;
+  }
+  S.watchlist.push({ ...a, addedAt: new Date().toISOString() });
+  saveWatchlist();
+  renderWatchlist();
+  // Re-render result to update button state
+  const btn = document.querySelector('#stock-query-result button');
+  if (btn) { btn.textContent = '✓ Redan i bevakningslistan'; btn.disabled = true; btn.style.color = 'var(--muted)'; }
+  toast(`${a.ticker} — ${a.namn} tillagd i bevakningslistan`, 'ok');
+}
+
 function addStockToWatchlist(aJson, sector) {
   const a = JSON.parse(aJson);
-  toast(`${a.ticker} — ${a.namn} noterat (bevakningslista kommer i v2)`, 'info');
+  addToWatchlist(JSON.stringify({ ...a, sektor: sector }));
 }
+
+function removeFromWatchlist(ticker) {
+  S.watchlist = S.watchlist.filter(w => w.ticker !== ticker);
+  saveWatchlist();
+  renderWatchlist();
+}
+
+function renderWatchlist() {
+  const el = document.getElementById('watchlist-content');
+  const cnt = document.getElementById('watchlist-count');
+  if (!el) return;
+  cnt.textContent = S.watchlist.length + ' aktier';
+  cnt.className = S.watchlist.length > 0 ? 'badge b-accent' : 'badge b-muted';
+
+  if (!S.watchlist.length) {
+    el.innerHTML = '<div style="padding:16px;text-align:center;color:var(--muted);font-size:12px;">Analysera en aktie och lägg till via "+ Bevaka"-knappen.</div>';
+    return;
+  }
+
+  el.innerHTML = S.watchlist.map(a => {
+    const sigColor = a.signal==='KÖP'?'var(--green)':a.signal==='SÄLJ'?'var(--red)':'var(--accent2)';
+    const riskColor = a.risk==='Låg'?'var(--green)':a.risk==='Hög'?'var(--red)':'var(--accent2)';
+    const added = a.addedAt ? new Date(a.addedAt).toLocaleDateString('sv-SE') : '—';
+    return `<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid rgba(30,45,64,.5);">
+      <span style="font-family:var(--mono);font-size:11px;font-weight:700;color:var(--accent);background:var(--bg4);border:1px solid var(--border);padding:2px 6px;border-radius:4px;white-space:nowrap;">${a.ticker}</span>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:12px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${a.namn||a.ticker}</div>
+        <div style="font-size:10px;color:var(--muted);">${a.sektor||''} · ${added}</div>
+      </div>
+      <span style="font-size:11px;font-weight:700;color:${sigColor};white-space:nowrap;">${a.signal||'—'}</span>
+      <span style="font-size:11px;color:${riskColor};white-space:nowrap;">R:${a.risk?.charAt(0)||'?'}</span>
+      ${a.uppside ? `<span style="font-family:var(--mono);font-size:11px;color:var(--green);white-space:nowrap;">${a.uppside}</span>` : ''}
+      <button onclick="removeFromWatchlist('${a.ticker}')" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;padding:0;flex-shrink:0;" title="Ta bort">×</button>
+    </div>`;
+  }).join('');
+}
+
+// Init watchlist on load
+document.addEventListener('DOMContentLoaded', () => { setTimeout(renderWatchlist, 100); });
 
 function getMockStockResults() {
   const today = new Date().toISOString().slice(0,10);
