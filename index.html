@@ -3413,6 +3413,9 @@ function classifyMarket(m) {
 }
 
 async function fetchNewMarkets() {
+  const btn = document.querySelector('[onclick="fetchNewMarkets()"]');
+  if (btn) { btn.innerHTML = '<span class="spinner"></span>Hämtar…'; btn.disabled = true; }
+
   document.getElementById('nm-grid').innerHTML = `
     <div class="card"><div style="padding:30px;text-align:center;color:var(--muted);font-size:13px;">
       <div class="spinner"></div> Hämtar nya marknader…
@@ -3420,8 +3423,8 @@ async function fetchNewMarkets() {
 
   let markets = [];
   try {
-    // Fetch newest markets by sorting by creation date
-    const r = await fetch('${POLY_URL}?limit=50&active=true&closed=false&order=startDate&ascending=false');
+    // Polymarket Gamma API — sort by newest, no unsupported params
+    const r = await fetchWithTimeout(`${POLY_URL}?limit=50&active=true&closed=false`, 10000);
     if (r.ok) {
       const data = await r.json();
       markets = (data||[]).map(m => {
@@ -3441,19 +3444,24 @@ async function fetchNewMarkets() {
           startDate: created,
           daysOld,
           isNew: daysOld <= 7,
-          url: m.url || ('https://polymarket.com/event/' + (m.slug||'')),
+          url: m.url || (m.slug ? 'https://polymarket.com/event/' + m.slug : ''),
           slug: m.slug || ''
         };
-      });
+      // Sort newest first by startDate
+      }).sort((a, b) => (b.startDate||'') > (a.startDate||'') ? 1 : -1);
     }
   } catch(e) {
-    markets = [];
+    console.error('fetchNewMarkets:', e.message);
   }
-  if (!markets.length) { document.getElementById('nm-grid').innerHTML='<div class="card"><div style="padding:30px;text-align:center;color:var(--muted);">Inga marknader hittades — kontrollera anslutning.</div></div>'; btn.innerHTML='⚽ Hämta odds'; btn.disabled=false; return; }
 
-  // Classify each market
+  if (btn) { btn.innerHTML = '↻ Hämta nya'; btn.disabled = false; }
+
+  if (!markets.length) {
+    document.getElementById('nm-grid').innerHTML = '<div class="card"><div style="padding:30px;text-align:center;color:var(--muted);">Inga marknader hittades — kontrollera anslutning och prova igen.</div></div>';
+    return;
+  }
+
   S.newMarkets = markets.map(m => ({ ...m, ...classifyMarket(m) }));
-
   updateNewMarketsStats();
   renderNewMarkets();
   toast(`${S.newMarkets.length} marknader laddade`, 'ok');
