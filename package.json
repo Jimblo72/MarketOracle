@@ -4,10 +4,9 @@
   "description": "MarketOracle - Prediktionsmarknad & aktieanalys",
   "private": true,
   "dependencies": {
-    "avanza": "^5.2.0",
-    "node-fetch": "^3.3.2"
+    "avanza": "^3.0.0"
   },
   "engines": {
-    "node": ">=18.0.0"
+    "node": "18"
   }
 }
