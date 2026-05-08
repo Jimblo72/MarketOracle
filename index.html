@@ -7,8 +7,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg:#080c10;--bg2:#0d1117;--bg3:#131a22;--bg4:#1a2332;
-    --border:#1e2d40;--text:#c9d8e8;--muted:#4a6278;
+    --bg:#090d12;--bg2:#0f1520;--bg3:#162030;--bg4:#1e2d40;
+    --border:#243448;--text:#dde8f4;--muted:#7a96aa;
     --accent:#00e5ff;--accent2:#f0a500;--green:#00c87a;
     --red:#ff4d6d;--purple:#9b72ff;
     --mono:'Space Mono',monospace;--sans:'Syne',sans-serif;
@@ -46,7 +46,7 @@
   /* Cards */
   .card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px 22px;margin-bottom:18px;}
   .card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
-  .card-title{font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);}
+  .card-title{font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#8fafc5;}
 
   /* Badges */
   .badge{font-family:var(--mono);font-size:10px;padding:3px 8px;border-radius:4px;letter-spacing:.5px;}
@@ -71,7 +71,7 @@
   .stat.c-green::before{background:linear-gradient(90deg,var(--green),transparent);}
   .stat.c-purple::before{background:linear-gradient(90deg,var(--purple),transparent);}
   .stat.c-red::before{background:linear-gradient(90deg,var(--red),transparent);}
-  .stat-label{font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;}
+  .stat-label{font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:#8fafc5;margin-bottom:8px;}
   .stat-value{font-family:var(--mono);font-size:26px;font-weight:700;color:#fff;letter-spacing:-1px;}
   .stat-sub{font-size:11px;color:var(--muted);margin-top:5px;}
   .stat-chg{font-family:var(--mono);font-size:11px;margin-top:5px;}
@@ -101,7 +101,7 @@
   .mrow:last-child{border-bottom:none;}
   .mrow:hover{background:rgba(255,255,255,.02);border-radius:6px;padding-left:8px;}
   .mrow-name{flex:1;font-size:13px;font-weight:600;line-height:1.3;}
-  .mrow-name small{display:block;font-size:11px;color:var(--muted);font-weight:400;margin-top:2px;}
+  .mrow-name small{display:block;font-size:11px;color:#7a96aa;font-weight:400;margin-top:2px;}
   .prob-wrap{width:110px;}
   .prob-lbl{display:flex;justify-content:space-between;font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:3px;}
   .prob-bar{height:3px;background:var(--bg4);border-radius:2px;overflow:hidden;}
@@ -674,11 +674,12 @@
 
     <!-- Category tabs -->
     <div style="display:flex;gap:2px;margin-bottom:14px;border-bottom:1px solid var(--border);overflow-x:auto;" id="rec-tabs">
-      <button class="rec-tab active" onclick="recTab('all',this)">★ Alla <span id="rtc-all" class="badge b-muted" style="font-size:9px;padding:1px 5px;margin-left:3px;">0</span></button>
-      <button class="rec-tab" onclick="recTab('polymarket',this)">⬡ Value Bets <span id="rtc-polymarket" class="badge b-muted" style="font-size:9px;padding:1px 5px;margin-left:3px;">0</span></button>
-      <button class="rec-tab" onclick="recTab('safeyield',this)">🛡 Safe Yield <span id="rtc-safeyield" class="badge b-muted" style="font-size:9px;padding:1px 5px;margin-left:3px;">0</span></button>
-      <button class="rec-tab" onclick="recTab('sport',this)">⚽ Sport <span id="rtc-sport" class="badge b-muted" style="font-size:9px;padding:1px 5px;margin-left:3px;">0</span></button>
-      <button class="rec-tab" onclick="recTab('euedge',this)">🇪🇺 EU Edge <span id="rtc-euedge" class="badge b-muted" style="font-size:9px;padding:1px 5px;margin-left:3px;">0</span></button>
+      <button class="rec-tab active" id="rt-all" onclick="recTab('all')">★ Alla <span id="rtc-all" class="badge b-muted" style="font-size:9px;padding:1px 5px;margin-left:3px;">0</span></button>
+      <button class="rec-tab" id="rt-polymarket" onclick="recTab('polymarket')">⬡ Value Bets <span id="rtc-polymarket" class="badge b-muted" style="font-size:9px;padding:1px 5px;margin-left:3px;">0</span></button>
+      <button class="rec-tab" id="rt-safeyield" onclick="recTab('safeyield')">🛡 Safe Yield <span id="rtc-safeyield" class="badge b-muted" style="font-size:9px;padding:1px 5px;margin-left:3px;">0</span></button>
+      <button class="rec-tab" id="rt-sport" onclick="recTab('sport')">⚽ Sport <span id="rtc-sport" class="badge b-muted" style="font-size:9px;padding:1px 5px;margin-left:3px;">0</span></button>
+      <button class="rec-tab" id="rt-euedge" onclick="recTab('euedge')">🇪🇺 EU Edge <span id="rtc-euedge" class="badge b-muted" style="font-size:9px;padding:1px 5px;margin-left:3px;">0</span></button>
+      <button class="rec-tab" id="rt-surebet" onclick="recTab('surebet')">🔒 Sure Bets <span id="rtc-surebet" class="badge b-muted" style="font-size:9px;padding:1px 5px;margin-left:3px;">0</span></button>
     </div>
 
     <!-- Source status -->
@@ -1147,17 +1148,16 @@
     <!-- Filter -->
     <div style="display:none;gap:6px;flex-wrap:wrap;margin-bottom:16px;" id="sp-filter-bar">
       <span style="font-size:11px;color:var(--muted);font-weight:700;letter-spacing:1px;align-self:center;">VISA:</span>
-      <button class="nm-filter active" onclick="filterSport('all',this)">Alla matcher</button>
-      <button class="nm-filter" onclick="filterSport('value',this)">⚡ Value bets</button>
-      <button class="nm-filter" onclick="filterSport('sure',this)">🔒 Sure bets</button>
+      <button class="nm-filter active" id="sf-all" onclick="filterSport('all')">Alla matcher</button>
+      <button class="nm-filter" id="sf-value" onclick="filterSport('value')">⚡ Value bets</button>
+      <button class="nm-filter" id="sf-sure" onclick="filterSport('sure')">🔒 Sure bets</button>
     </div>
 
     <!-- Results -->
     <div id="sp-results">
       <div class="card"><div style="padding:30px;text-align:center;color:var(--muted);font-size:13px;">
-        <div style="margin-bottom:12px;">Lägg till The Odds API-nyckel i Inställningar för riktiga odds.</div>
-        <button class="btn btn-ghost btn-sm" onclick="loadSportMockData()">⚡ Visa exempeldata (mockdata)</button>
-        <br><a href="https://the-odds-api.com" target="_blank" style="color:var(--accent);font-size:12px;margin-top:8px;display:inline-block;">Skaffa gratis API-nyckel →</a>
+        Lägg till The Odds API-nyckel i Inställningar och välj sport ovan.
+        <br><a href="https://the-odds-api.com" target="_blank" style="color:var(--accent);font-size:12px;margin-top:8px;display:inline-block;">Skaffa gratis API-nyckel på the-odds-api.com →</a>
       </div></div>
     </div>
 
@@ -1389,9 +1389,9 @@ async function fetchPolymarket() {
     });
     renderPolyList();
   } catch(e) {
-    S.polyMarkets = getMockPolyMarkets();
+    S.polyMarkets = [];
     renderPolyList();
-    console.log('Polymarket — visar mockdata:', e.message);
+    console.log('Polymarket ej tillgänglig:', e.message);
   }
 }
 
@@ -1410,9 +1410,9 @@ async function fetchMetaculus() {
     }));
     renderMetaList();
   } catch(e) {
-    S.metaMarkets = getMockMetaMarkets();
+    S.metaMarkets = [];
     renderMetaList();
-    console.log('Metaculus — visar mockdata:', e.message);
+    console.log('Metaculus ej tillgänglig:', e.message);
   }
 }
 
@@ -1490,6 +1490,11 @@ function updateDashMarkets() {
 
 // =================== TOP 20 RECOMMENDATIONS ===================
 function collectTopRecommendations() {
+  const rfBtn = document.getElementById('btn-refresh-top20');
+  if (rfBtn) { rfBtn.innerHTML = '<span class="spinner"></span>'; rfBtn.disabled = true; }
+  setTimeout(() => {
+    if (rfBtn) { rfBtn.innerHTML = '↻ Uppdatera'; rfBtn.disabled = false; }
+  }, 1500);
   const recs = [];
   const riskW = { 'Minimal':0.05, 'Låg':0.15, 'Låg-medel':0.3, 'Medel':0.5, 'Hög':0.8, 'Oklar':0.6 };
   const confW = { 'Hög':1.0, 'Medel':0.7, 'Låg':0.4 };
@@ -1639,10 +1644,11 @@ function collectTopRecommendations() {
 // =================== REC TABS ===================
 S.recFilter = 'all';
 
-function recTab(filter, btn) {
+function recTab(filter) {
   S.recFilter = filter;
   document.querySelectorAll('.rec-tab').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
+  const active = document.getElementById('rt-' + filter);
+  if (active) active.classList.add('active');
   renderTop20(S.topRecs, null);
 }
 
@@ -1661,9 +1667,10 @@ function renderTop20(recs, total) {
   else if (S.recFilter === 'safeyield') filtered = recs.filter(r => r.type === 'safeyield');
   else if (S.recFilter === 'sport')     filtered = recs.filter(r => r.type === 'sport');
   else if (S.recFilter === 'euedge')    filtered = recs.filter(r => r.typeLabel === 'EU Edge' || r.typeLabel === 'Korsanalys');
+  else if (S.recFilter === 'surebet')   filtered = recs.filter(r => r.typeLabel === 'Sure Bet' || r.type === 'safeyield');
   if(src){ src.textContent = `${filtered.length} signals · ${new Date().toLocaleTimeString('sv-SE',{hour:'2-digit',minute:'2-digit'})}`; src.className = 'badge b-accent'; }
   if (!filtered.length) {
-    const hints = { polymarket:'Kör ◆ Kör AI-analys från Översikten', safeyield:'Kör ⚡ Skanna Safe Yield i Value Scanner', sport:'Kör ⚽ Hämta odds i Nya Spel → Sport Odds', euedge:'Kör ↻ Hämta nya + ◆ AI-analysera i Nya Spel → Upptäck nya' };
+    const hints = { polymarket:'Kör ◆ Kör AI-analys från Översikten', safeyield:'Kör ⚡ Skanna Safe Yield i Value Scanner → Safe Yield-fliken', sport:'Kör ⚽ Hämta odds i Nya Spel → Sport Odds (kräver Odds API-nyckel)', euedge:'Kör ↻ Hämta nya + ◆ AI-analysera i Nya Spel → Upptäck nya', surebet:'Kör ⚡ Skanna Safe Yield (Value Scanner) för Polymarket sure bets, eller ⚽ Hämta odds för sport sure bets' };
     if(el) el.innerHTML = `<div style="padding:24px;text-align:center;color:var(--muted);font-size:13px;">Inga rekommendationer i denna kategori.<br><span style="color:var(--accent);font-size:12px;margin-top:6px;display:inline-block;">${hints[S.recFilter]||'Kör fler analyser.'}</span></div>`;
     return;
   }
@@ -1684,10 +1691,10 @@ function renderTop20(recs, total) {
         <div style="font-size:13px;font-weight:600;color:#fff;line-height:1.4;margin-bottom:3px;">${r.market}</div>
         <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
           <span style="font-size:12px;color:var(--muted);">Bet: <strong style="color:var(--text);">${r.outcome}</strong></span>
-          <span style="font-size:12px;">Avk: <strong class="up">${returnStr}</strong></span>
+          <span style="font-size:13px;font-weight:700;color:var(--green);">${returnStr}</span>
           <span style="font-size:12px;">Risk: <strong style="color:${riskColor};">${r.risk}</strong></span>
           <span style="font-size:12px;">Conf: <strong style="color:var(--accent);">${r.confidence}</strong></span>
-          <span style="font-family:var(--mono);font-size:11px;color:var(--muted);">EV ${r.evScore.toFixed(1)}</span>
+          <span style="font-family:var(--mono);font-size:11px;color:var(--border);background:var(--bg3);padding:1px 6px;border-radius:3px;border:1px solid var(--border);">EV ${r.evScore.toFixed(1)}</span>
         </div>
       </div>
       <button class="btn btn-primary btn-sm" onclick='quickAddBet(${JSON.stringify(JSON.stringify(r))})' style="white-space:nowrap;font-size:11px;">+ Lägg bet</button>
@@ -1696,7 +1703,7 @@ function renderTop20(recs, total) {
 }
 
 function updateRecCounts(recs) {
-  const counts = { all: recs.length, polymarket: recs.filter(r=>r.type==='polymarket'&&r.typeLabel!=='EU Edge'&&r.typeLabel!=='Korsanalys').length, safeyield: recs.filter(r=>r.type==='safeyield').length, sport: recs.filter(r=>r.type==='sport').length, euedge: recs.filter(r=>r.typeLabel==='EU Edge'||r.typeLabel==='Korsanalys').length };
+  const counts = { all: recs.length, polymarket: recs.filter(r=>r.type==='polymarket'&&r.typeLabel!=='EU Edge'&&r.typeLabel!=='Korsanalys').length, safeyield: recs.filter(r=>r.type==='safeyield').length, sport: recs.filter(r=>r.type==='sport').length, euedge: recs.filter(r=>r.typeLabel==='EU Edge'||r.typeLabel==='Korsanalys').length, surebet: recs.filter(r=>r.typeLabel==='Sure Bet'||r.type==='safeyield').length };
   Object.entries(counts).forEach(([k,v]) => { const el=document.getElementById('rtc-'+k); if(!el)return; el.textContent=v; el.className=v>0?'badge b-accent':'badge b-muted'; el.style.fontSize='9px'; el.style.padding='1px 5px'; el.style.marginLeft='3px'; });
 }
 
@@ -1903,17 +1910,34 @@ async function runStockAnalysis() {
   const klimat = S.analysis?.klimat || 'Neutral';
   const klimatMotivering = S.analysis?.klimat_motivering || '';
 
+  const today = new Date().toISOString().slice(0,10);
   const prompt = `Du är en aktiestrateg med fokus på nordiska och europeiska marknader.
 
 MAKROKLIMAT: ${klimat} — ${klimatMotivering}
 
-SEKTORER:
+SEKTORER ATT ANALYSERA:
 ${allSectors}
 
-För varje sektor: 3 aktier + 2 fonder/ETF. Prioritera nordiska bolag.
+Returnera ENBART ett JSON-objekt (inga kommentarer, inget annat) med denna struktur:
+{
+  "uppdaterad": "${today}",
+  "klimat_sammanfattning": "2 meningar om varför dessa sektorer är intressanta",
+  "sektorer": [
+    {
+      "namn": "Teknik & AI",
+      "signal": "BULLISH",
+      "makrodriving": "Varför sektorn gynnas",
+      "aktier": [
+        { "ticker": "ASML", "bors": "Euronext", "namn": "ASML Holding", "land": "NL", "pe_estimat": "28x", "kurs_estimat": "720 EUR", "uppside": "+18%", "risk": "Låg", "confidence": "Hög", "tes": "Investeringstes", "risker": "Risker" }
+      ],
+      "fonder": [
+        { "namn": "iShares MSCI World IT", "ticker": "IUIT", "bors": "LSE", "typ": "ETF", "avgift": "0.25%", "tes": "Kort tes", "risk": "Medel" }
+      ]
+    }
+  ]
+}
 
-Returnera ENDAST JSON:
-{"uppdaterad":"${new Date().toISOString().slice(0,10)}","klimat_sammanfattning":"2 meningar","sektorer":[{"namn":"Teknik & AI","signal":"BULLISH","makrodriving":"kort","aktier":[{"ticker":"ASML","bors":"Euronext","namn":"ASML Holding","land":"NL","pe_estimat":"28x","kurs_estimat":"720 EUR","uppside":"+18%","risk":"Låg","confidence":"Hög","tes":"kort tes","risker":"kort"}],"fonder":[{"namn":"iShares MSCI World IT","ticker":"IUIT","bors":"LSE","typ":"ETF","avgift":"0.25%","tes":"kort","risk":"Medel"}]}]}`;
+Inkludera 3 aktier och 2 fonder per sektor. Prioritera nordiska bolag.`;
 
   try {
     const res = await fetch('https://api.anthropic.com/v1/messages', {
@@ -1949,10 +1973,7 @@ Returnera ENDAST JSON:
   } catch(e) {
     console.error(e);
     toast('Analysfel: ' + e.message, 'err');
-    // Show mock result for demo
-    const mock = getMockStockResults();
-    S.stockResults = mock;
-    renderStocks(mock);
+    // No fallback — show the actual error to user
   }
 
   btn.innerHTML = '◆ Generera aktieanalys';
@@ -2391,7 +2412,10 @@ function resetBankroll() {
 }
 
 function renderBankroll() {
-  const active   = S.bets.filter(b=>b.status==='active');
+  const allActive = S.bets.filter(b=>b.status==='active');
+  const active = S.betFilter === 'all' ? allActive
+    : S.betFilter === 'surebet' ? allActive.filter(b => b.type === 'safeyield' || b.typeLabel === 'Sure Bet')
+    : allActive.filter(b => b.type === S.betFilter);
   const settled  = S.bets.filter(b=>b.status!=='active');
   const staked   = active.reduce((s,b)=>s+b.stake,0);
   const realizedPnl = settled.reduce((s,b)=>s+(b.pnl||0),0);
@@ -2743,6 +2767,8 @@ function scannerTab(id, btn) {
 
 // =================== SAFE YIELD SCAN ===================
 async function runSafeYieldScan() {
+  const syBtn = document.querySelector('[onclick="runSafeYieldScan()"]');
+  if (syBtn) { syBtn.innerHTML = '<span class="spinner"></span>Skannar…'; syBtn.disabled = true; }
   document.getElementById('sy-badge').textContent = 'Skannar…';
   document.getElementById('arb-badge').textContent = 'Skannar…';
 
@@ -2771,10 +2797,10 @@ async function runSafeYieldScan() {
       });
     }
   } catch(e) {
-    markets = getMockSafeYieldMarkets();
+    markets = []; toast("Polymarket ej tillgänglig", "err");
   }
 
-  if (!markets.length) markets = getMockSafeYieldMarkets();
+  if (!markets.length) { toast('Polymarket ej tillgänglig — prova igen', 'err'); btn.innerHTML='⚡ Skanna Safe Yield'; btn.disabled=false; return; }
 
   const now = new Date();
 
@@ -2844,7 +2870,7 @@ async function runSafeYieldScan() {
             <div style="font-size:13px;font-weight:600;line-height:1.4;">${m.question}</div>
             <div style="font-size:11px;margin-top:3px;display:flex;gap:8px;align-items:center;">
               <span class="chip chip-poly">Polymarket</span>
-              ${m.url ? `<a href="${m.url}" target="_blank" style="color:var(--accent);font-size:10px;text-decoration:none;">Öppna →</a>` : ''}
+              ${m.url && m.url.length > 30 && !m.url.endsWith("polymarket.com") ? `<a href="${m.url}" target="_blank" rel="noopener" style="color:var(--accent);font-size:10px;text-decoration:none;">Öppna på Polymarket →</a>` : ''}
             </div>
           </td>
           <td style="text-align:center;">
@@ -2860,8 +2886,8 @@ async function runSafeYieldScan() {
             ${m.daysLeft ? `<div style="font-size:10px;color:var(--muted);">${m.endDate ? new Date(m.endDate).toLocaleDateString('sv-SE') : ''}</div>` : ''}
           </td>
           <td style="text-align:center;">
-            <div style="font-family:var(--mono);font-size:18px;font-weight:700;color:${annColor};">${ann}</div>
-            <div style="font-size:10px;color:var(--muted);">per år</div>
+            <div style="font-family:var(--mono);font-size:24px;font-weight:800;color:${annColor};letter-spacing:-1px;">${ann}</div>
+            <div style="font-size:11px;color:${annColor};font-weight:700;letter-spacing:.5px;">PER ÅR</div>
           </td>
           <td style="text-align:center;font-family:var(--mono);font-size:12px;color:var(--muted);">${vol}</td>
           <td style="text-align:center;"><span style="font-size:11px;font-weight:700;color:${riskColor};">${m.risk}</span></td>
@@ -2889,6 +2915,8 @@ async function runSafeYieldScan() {
 
   // Switch to yield tab
   S.safeYieldData = nearCertainty;
+  const syBtnEnd = document.querySelector('[onclick="runSafeYieldScan()"]');
+  if (syBtnEnd) { syBtnEnd.innerHTML = '⚡ Skanna Safe Yield'; syBtnEnd.disabled = false; }
   scannerTab('yield', document.querySelectorAll('.scanner-tab')[1]);
   toast(`${nearCertainty.length} safe yield + ${arbOpps.length} arbitrage-fönster`, 'ok');
   collectTopRecommendations();
@@ -3038,7 +3066,7 @@ async function searchPolymarket(query) {
         return { question: m.question||m.title||'—', prob, volume: m.volume||0, platform:'Polymarket', color:'var(--accent)', url: m.url||'' };
       });
   } catch(e) {
-    return getMockCrossPolymarket(query);
+    return [];
   }
 }
 
@@ -3059,7 +3087,7 @@ async function searchMetaculus(query) {
       url: 'https://metaculus.com/questions/'+q.id
     }));
   } catch(e) {
-    return getMockCrossMeta(query);
+    return [];
   }
 }
 
@@ -3078,7 +3106,7 @@ async function searchManifold(query) {
       url: m.url||('https://manifold.markets/'+m.slug)
     }));
   } catch(e) {
-    return getMockCrossManifolk(query);
+    return [];
   }
 }
 
@@ -3403,9 +3431,9 @@ async function fetchNewMarkets() {
       });
     }
   } catch(e) {
-    markets = getMockNewMarkets();
+    markets = [];
   }
-  if (!markets.length) markets = getMockNewMarkets();
+  if (!markets.length) { document.getElementById('nm-grid').innerHTML='<div class="card"><div style="padding:30px;text-align:center;color:var(--muted);">Inga marknader hittades — kontrollera anslutning.</div></div>'; btn.innerHTML='⚽ Hämta odds'; btn.disabled=false; return; }
 
   // Classify each market
   S.newMarkets = markets.map(m => ({ ...m, ...classifyMarket(m) }));
@@ -3467,7 +3495,11 @@ function renderNmCard(m) {
             : m.volume ? '$'+Math.round(m.volume) : '< $100';
   const age = m.daysOld === 0 ? 'Idag' : m.daysOld === 1 ? '1 dag' : `${m.daysOld} dagar`;
   const endStr = m.endDate ? new Date(m.endDate).toLocaleDateString('sv-SE') : '—';
-  const flagClass = m.isSE ? 'se-flag' : m.isEU ? 'eu-flag' : '';
+  // Build correct Polymarket URL from slug if url is just homepage
+    const pmUrl = m.url && m.url.length > 30 && !m.url.endsWith('polymarket.com') && !m.url.endsWith('polymarket.com/') 
+      ? m.url 
+      : (m.slug ? 'https://polymarket.com/event/' + m.slug : m.url || '');
+    const flagClass = m.isSE ? 'se-flag' : m.isEU ? 'eu-flag' : '';
   const edgeClass = m.edgeScore >= 5 ? 'edge-high' : '';
   const regionChip = m.isSE
     ? `<span class="chip" style="background:rgba(0,106,167,.15);color:#FECC00;border-color:rgba(254,204,0,.3);">🇸🇪 Sverige</span>`
@@ -3694,7 +3726,7 @@ async function fetchSportOdds(){
   const sport=document.getElementById('sp-sport').value;
   const market=document.getElementById('sp-market').value;
   const btn=document.getElementById('btn-sp-fetch');
-  btn.innerHTML='<span class="spinner"></span>Hämtar…';btn.disabled=true;
+  if(btn){btn.innerHTML='<span class="spinner"></span>Hämtar odds…';btn.disabled=true;}
   document.getElementById('sp-results').innerHTML='<div class="card"><div style="padding:24px;text-align:center;color:var(--muted);"><div class="spinner"></div> Hämtar odds…</div></div>';
   document.getElementById('sp-stats').style.display='none';
   document.getElementById('sp-ai-panel').style.display='none';
@@ -3715,6 +3747,23 @@ async function fetchSportOdds(){
   btn.innerHTML='⚽ Hämta odds';btn.disabled=false;
 }
 
+// Bookmakers that are exchanges — charge commission on winnings
+const EXCHANGE_COMMISSION = {
+  'betfair':        0.05,  // 5% standard, can vary 2-8%
+  'betfair_ex_eu':  0.05,
+  'betfair_sb_uk':  0.05,
+  'matchbook':      0.02,  // 2%
+  'smarkets':       0.02,  // 2%
+};
+
+function adjustForCommission(bookKey, decimalOdds) {
+  const comm = EXCHANGE_COMMISSION[bookKey?.toLowerCase()] || 0;
+  if (!comm) return decimalOdds;
+  // Adjusted odds: net return after commission
+  // Net = (odds - 1) * (1 - comm) + 1
+  return parseFloat(((decimalOdds - 1) * (1 - comm) + 1).toFixed(3));
+}
+
 function processOddsData(data){
   const minEdge=parseFloat(document.getElementById('sp-min-edge')?.value||3);
   return data.map(ev=>{
@@ -3722,9 +3771,16 @@ function processOddsData(data){
     const om={};
     books.forEach(b=>{
       const bn=BK_NAMES[b.key]||b.title||b.key;
+      const isExchange = !!EXCHANGE_COMMISSION[b.key?.toLowerCase()];
+      const comm = EXCHANGE_COMMISSION[b.key?.toLowerCase()] || 0;
       (b.markets||[]).forEach(m=>(m.outcomes||[]).forEach(o=>{
         if(!om[o.name])om[o.name]=[];
-        om[o.name].push({book:bn,key:b.key,price:o.price});
+        const rawOdds = o.price;
+        const adjOdds = adjustForCommission(b.key, rawOdds);
+        om[o.name].push({
+          book: bn + (isExchange && comm > 0 ? ` (exkl. ${(comm*100).toFixed(0)}% komm.)` : ''),
+          key: b.key, price: adjOdds, rawPrice: rawOdds, isExchange, commission: comm
+        });
       }));
     });
     const outcomes=Object.entries(om).map(([name,bk])=>{
@@ -3735,9 +3791,10 @@ function processOddsData(data){
     });
     const sbSum=outcomes.reduce((s,o)=>s+(1/o.maxOdds),0);
     const rawProfit=sbSum<1.0?(1/sbSum-1)*100:0;
-    // Real sure bets: 0.5–3% is realistic. >5% almost certainly bad/stale data.
-    const isSureBet=sbSum<1.0&&sbSum>0.5&&rawProfit<5.0&&outcomes.length>=2;
-    return{id:ev.id,homeTeam:ev.home_team,awayTeam:ev.away_team,commenceTime:ev.commence_time,sport:ev.sport_title,outcomes,valueBets:outcomes.filter(o=>o.spread>=minEdge),isSureBet,sureBetProfit:isSureBet?rawProfit.toFixed(2):null,sureBetSum:sbSum,bookCount:books.length};
+    // Commission already factored into adjusted odds above
+    const isSureBet=sbSum<1.0&&sbSum>0.5&&rawProfit>0&&rawProfit<8.0&&outcomes.length>=2;
+    const hasExchange = outcomes.some(o => o.bookOdds.some(b => b.isExchange));
+    return{id:ev.id,homeTeam:ev.home_team,awayTeam:ev.away_team,commenceTime:ev.commence_time,sport:ev.sport_title,outcomes,valueBets:outcomes.filter(o=>o.spread>=minEdge),isSureBet,sureBetProfit:isSureBet?rawProfit.toFixed(2):null,sureBetSum:sbSum,bookCount:books.length,hasExchange};
   });
 }
 
@@ -3749,10 +3806,12 @@ function updateSportStats(){
   document.getElementById('sp-books').textContent=ms.length?Math.max(...ms.map(m=>m.bookCount)):0;
 }
 
-function filterSport(f,btn){
+function filterSport(f){
   S.spFilter=f;
   document.querySelectorAll('#sp-filter-bar .nm-filter').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');renderSportResults();
+  const active=document.getElementById('sf-'+f);
+  if(active)active.classList.add('active');
+  renderSportResults();
 }
 
 function renderSportResults(){
@@ -3769,7 +3828,7 @@ function renderSportResults(){
 function renderSportCard(m){
   const dt=m.commenceTime?new Date(m.commenceTime):null;
   const ts=dt?dt.toLocaleDateString('sv-SE',{weekday:'short',month:'short',day:'numeric'})+' '+dt.toLocaleTimeString('sv-SE',{hour:'2-digit',minute:'2-digit'}):'—';
-  const badge=m.isSureBet?`<div style="display:inline-flex;gap:6px;align-items:center;background:rgba(0,200,122,.12);border:1px solid rgba(0,200,122,.3);border-radius:4px;padding:3px 10px;font-size:10px;font-weight:700;letter-spacing:1.5px;color:var(--green);margin-bottom:10px;">🔒 SURE BET +${m.sureBetProfit}%</div>`:m.valueBets.length?`<div style="display:inline-flex;gap:6px;align-items:center;background:rgba(240,165,0,.1);border:1px solid rgba(240,165,0,.25);border-radius:4px;padding:3px 10px;font-size:10px;font-weight:700;letter-spacing:1.5px;color:var(--accent2);margin-bottom:10px;">⚡ VALUE BET</div>`:'';
+  const badge=m.isSureBet?`<div style="display:inline-flex;gap:6px;align-items:center;background:rgba(0,200,122,.12);border:1px solid rgba(0,200,122,.3);border-radius:4px;padding:3px 10px;font-size:10px;font-weight:700;letter-spacing:1.5px;color:var(--green);margin-bottom:10px;">🔒 SURE BET  +${m.sureBetProfit}% garanterad vinst</div>`:m.valueBets.length?`<div style="display:inline-flex;gap:6px;align-items:center;background:rgba(240,165,0,.1);border:1px solid rgba(240,165,0,.25);border-radius:4px;padding:3px 10px;font-size:10px;font-weight:700;letter-spacing:1.5px;color:var(--accent2);margin-bottom:10px;">⚡ VALUE BET</div>`:'';
   const bc=m.isSureBet?'rgba(0,200,122,.35)':m.valueBets.length?'rgba(240,165,0,.25)':'var(--border)';
   const minEdge=parseFloat(document.getElementById('sp-min-edge')?.value||3);
   return `<div style="background:var(--bg2);border:1px solid ${bc};border-radius:12px;padding:18px 20px;margin-bottom:14px;">
@@ -3779,7 +3838,7 @@ function renderSportCard(m){
         <div style="font-size:16px;font-weight:800;color:#fff;">${m.homeTeam} <span style="color:var(--muted);font-weight:400;">vs</span> ${m.awayTeam}</div>
         <div style="font-size:11px;color:var(--muted);margin-top:3px;">${m.sport||''} · ${ts} · ${m.bookCount} bookmakers</div>
       </div>
-      ${m.isSureBet?`<div style="background:rgba(0,200,122,.08);border:1px solid rgba(0,200,122,.2);border-radius:8px;padding:10px 14px;text-align:center;"><div style="font-size:10px;color:var(--green);font-weight:700;letter-spacing:1px;margin-bottom:2px;">SURE BET</div><div style="font-family:var(--mono);font-size:20px;font-weight:700;color:var(--green);">+${m.sureBetProfit}%</div><div style="font-size:10px;color:var(--muted);">Garanterad vinst</div></div>`:''}
+      ${m.isSureBet?`<div style="background:rgba(0,200,122,.08);border:1px solid rgba(0,200,122,.2);border-radius:8px;padding:10px 14px;text-align:center;"><div style="font-size:10px;color:var(--green);font-weight:700;letter-spacing:1px;margin-bottom:2px;">SURE BET</div><div style="font-family:var(--mono);font-size:28px;font-weight:800;color:var(--green);letter-spacing:-1px;">+${m.sureBetProfit}%</div><div style="font-size:11px;color:var(--green);font-weight:700;letter-spacing:.5px;">GARANTERAD VINST</div></div>`:''}
     </div>
     ${m.outcomes.map(o=>{
       const hv=o.spread>=minEdge;
@@ -3807,7 +3866,7 @@ function renderSportCard(m){
         ${hv&&o.bestBook?`<div style="margin-top:8px;background:rgba(240,165,0,.06);border:1px solid rgba(240,165,0,.15);border-radius:6px;padding:8px 12px;font-size:12px;color:var(--text);">⚡ Value: Bäst hos <strong style="color:var(--accent2);">${o.bestBook.book}</strong> (${o.maxOdds.toFixed(2)}) vs sämst ${o.worstBook?.book||'—'} (${o.minOdds.toFixed(2)}) — ${o.spread}% spread</div>`:''}
       </div>`;
     }).join('')}
-    ${m.isSureBet?`<div style="background:rgba(0,200,122,.07);border:1px solid rgba(0,200,122,.2);border-radius:8px;padding:12px 16px;font-size:12px;line-height:1.8;"><div style="font-weight:700;color:var(--green);margin-bottom:6px;">🔒 Sure bet strategi</div>${m.outcomes.map(o=>`<div>→ <strong>${o.name}</strong> hos <strong style="color:var(--green);">${o.bestBook?.book||'—'}</strong> @ ${o.maxOdds.toFixed(2)}</div>`).join('')}<div style="margin-top:6px;color:var(--muted);">Impl. summa: ${(m.sureBetSum*100).toFixed(1)}% → garanterad vinst ${m.sureBetProfit}%</div></div>`:''}
+    ${m.isSureBet?`<div style="background:rgba(0,200,122,.07);border:1px solid rgba(0,200,122,.2);border-radius:8px;padding:12px 16px;font-size:12px;line-height:1.8;"><div style="font-weight:700;color:var(--green);margin-bottom:6px;">🔒 Sure bet strategi ${m.hasExchange?"(odds justerade för exchange-kommission)":""}</div>${m.outcomes.map(o=>`<div>→ <strong>${o.name}</strong> hos <strong style="color:var(--green);">${o.bestBook?.book||"—"}</strong> @ ${o.maxOdds.toFixed(2)}</div>`).join("")}<div style="margin-top:6px;color:var(--muted);">Impl. summa: ${(m.sureBetSum*100).toFixed(1)}% → garanterad vinst ${m.sureBetProfit}% ${m.hasExchange?"(kommission inräknad)":""}</div></div>`:""}
   </div>`;
 }
 
@@ -3916,6 +3975,20 @@ async function fetchWithTimeout(url, ms = 8000) {
     clearTimeout(t);
     throw e;
   }
+}
+
+// =================== BET FILTER ===================
+S.betFilter = 'all';
+
+function filterBets(f) {
+  S.betFilter = f;
+  ['all','polymarket','safeyield','sport','surebet'].forEach(k => {
+    const el = document.getElementById('bf-' + k);
+    if (el) el.classList.remove('active');
+  });
+  const active = document.getElementById('bf-' + f);
+  if (active) active.classList.add('active');
+  renderBankroll();
 }
 
 // =================== FORMAT HELPERS ===================
