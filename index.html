@@ -1113,7 +1113,7 @@
     </div>
 
     <!-- Filter -->
-    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;" id="sp-filter-bar" style="display:none;">
+    <div style="display:none;gap:6px;flex-wrap:wrap;margin-bottom:16px;" id="sp-filter-bar">
       <span style="font-size:11px;color:var(--muted);font-weight:700;letter-spacing:1px;align-self:center;">VISA:</span>
       <button class="nm-filter active" onclick="filterSport('all',this)">Alla matcher</button>
       <button class="nm-filter" onclick="filterSport('value',this)">⚡ Value bets</button>
@@ -1123,8 +1123,9 @@
     <!-- Results -->
     <div id="sp-results">
       <div class="card"><div style="padding:30px;text-align:center;color:var(--muted);font-size:13px;">
-        Lägg till The Odds API-nyckel i Inställningar och välj sport ovan.
-        <br><a href="https://the-odds-api.com" target="_blank" style="color:var(--accent);font-size:12px;margin-top:8px;display:inline-block;">Skaffa gratis API-nyckel på the-odds-api.com →</a>
+        <div style="margin-bottom:12px;">Lägg till The Odds API-nyckel i Inställningar för riktiga odds.</div>
+        <button class="btn btn-ghost btn-sm" onclick="loadSportMockData()">⚡ Visa exempeldata (mockdata)</button>
+        <br><a href="https://the-odds-api.com" target="_blank" style="color:var(--accent);font-size:12px;margin-top:8px;display:inline-block;">Skaffa gratis API-nyckel →</a>
       </div></div>
     </div>
 
@@ -1335,9 +1336,15 @@ async function fetchMarkets() {
     `Uppdaterad ${new Date().toLocaleTimeString('sv-SE')} · ${S.polyMarkets.length} Polymarket + ${S.metaMarkets.length} Metaculus`;
 }
 
+// Detect if running on Netlify (deployed) or locally
+const IS_NETLIFY = window.location.hostname !== '127.0.0.1' && window.location.hostname !== 'localhost' && !window.location.protocol.startsWith('file');
+const POLY_URL  = IS_NETLIFY ? '/.netlify/functions/polymarket-proxy' : 'https://gamma-api.polymarket.com/markets';
+const META_URL  = IS_NETLIFY ? '/.netlify/functions/metaculus-proxy'  : 'https://www.metaculus.com/api2/questions/';
+const MANI_URL  = IS_NETLIFY ? '/.netlify/functions/manifold-proxy'   : 'https://api.manifold.markets/v0/search-markets';
+
 async function fetchPolymarket() {
   try {
-    const r = await fetch('https://gamma-api.polymarket.com/markets?limit=20&active=true&closed=false');
+    const r = await fetch(`${POLY_URL}?limit=20&active=true&closed=false`);
     if (!r.ok) throw new Error();
     const data = await r.json();
     S.polyMarkets = (data||[]).filter(m => m.outcomePrices || m.bestAsk).slice(0,15).map(m => {
@@ -1352,13 +1359,13 @@ async function fetchPolymarket() {
   } catch(e) {
     S.polyMarkets = getMockPolyMarkets();
     renderPolyList();
-    console.log('Polymarket CORS — visar mockdata');
+    console.log('Polymarket — visar mockdata:', e.message);
   }
 }
 
 async function fetchMetaculus() {
   try {
-    const r = await fetch('https://www.metaculus.com/api2/questions/?limit=15&order_by=-activity&status=open&format=json');
+    const r = await fetch(`${META_URL}?limit=15&order_by=-activity&status=open`);
     if (!r.ok) throw new Error();
     const data = await r.json();
     S.metaMarkets = (data.results||[]).slice(0,12).map(q => ({
@@ -1373,7 +1380,7 @@ async function fetchMetaculus() {
   } catch(e) {
     S.metaMarkets = getMockMetaMarkets();
     renderMetaList();
-    console.log('Metaculus CORS — visar mockdata');
+    console.log('Metaculus — visar mockdata:', e.message);
   }
 }
 
@@ -2136,7 +2143,7 @@ async function checkResolvedBets() {
 async function matchPolymarketResolved(bet) {
   // Search Polymarket for closed/resolved markets matching this bet
   try {
-    const r = await fetch(`https://gamma-api.polymarket.com/markets?limit=20&closed=true&active=false`);
+    const r = await fetchWithTimeout(`${POLY_URL}?limit=20&closed=true&active=false`, 8000);
     if (!r.ok) return null;
     const data = await r.json();
     // Find fuzzy match by question keywords
@@ -2737,7 +2744,7 @@ async function runSafeYieldScan() {
   // Fetch more markets from Polymarket with end dates
   let markets = [];
   try {
-    const r = await fetch('https://gamma-api.polymarket.com/markets?limit=50&active=true&closed=false');
+    const r = await fetch(`${POLY_URL}?limit=50&active=true&closed=false`);
     if (r.ok) {
       const data = await r.json();
       markets = (data||[]).map(m => {
@@ -3007,7 +3014,7 @@ async function autoScanCross() {
 
 async function searchPolymarket(query) {
   try {
-    const r = await fetch(`https://gamma-api.polymarket.com/markets?limit=20&active=true&closed=false`);
+    const r = await fetchWithTimeout(`${POLY_URL}?limit=20&active=true&closed=false`, 8000);
     if (!r.ok) throw new Error();
     const data = await r.json();
     const q = query.toLowerCase();
@@ -3033,7 +3040,7 @@ async function searchPolymarket(query) {
 async function searchMetaculus(query) {
   try {
     const q = encodeURIComponent(query.split(/\s+OR\s+/i)[0]);
-    const r = await fetch(`https://www.metaculus.com/api2/questions/?limit=10&status=open&search=${q}&format=json`);
+    const r = await fetchWithTimeout(`${META_URL}?limit=10&status=open&search=${q}`, 8000);
     if (!r.ok) throw new Error();
     const data = await r.json();
     return (data.results||[]).slice(0,8).map(q => ({
@@ -3054,7 +3061,7 @@ async function searchMetaculus(query) {
 async function searchManifold(query) {
   try {
     const q = encodeURIComponent(query.split(/\s+OR\s+/i)[0]);
-    const r = await fetch(`https://api.manifold.markets/v0/search-markets?term=${q}&limit=10&filter=open`);
+    const r = await fetchWithTimeout(`${MANI_URL}?term=${q}&limit=10&filter=open`, 8000);
     if (!r.ok) throw new Error();
     const data = await r.json();
     return (data||[]).slice(0,8).map(m => ({
@@ -3365,7 +3372,7 @@ async function fetchNewMarkets() {
   let markets = [];
   try {
     // Fetch newest markets by sorting by creation date
-    const r = await fetch('https://gamma-api.polymarket.com/markets?limit=50&active=true&closed=false&order=startDate&ascending=false');
+    const r = await fetch('${POLY_URL}?limit=50&active=true&closed=false&order=startDate&ascending=false');
     if (r.ok) {
       const data = await r.json();
       markets = (data||[]).map(m => {
@@ -3871,6 +3878,33 @@ function getMockSportData(sport){
     const isSureBet=sbSum<1.0;
     return{id:`mock-${i}`,homeTeam:m.home,awayTeam:m.away,commenceTime:dt.toISOString(),sport:sport2,outcomes,valueBets:outcomes.filter(o=>o.spread>=minEdge),isSureBet,sureBetProfit:isSureBet?((1/sbSum-1)*100).toFixed(2):null,sureBetSum:sbSum,bookCount:m.books.length};
   });
+}
+
+// =================== SPORT MOCK LOADER ===================
+function loadSportMockData() {
+  const sport = document.getElementById('sp-sport')?.value || 'soccer_sweden_allsvenskan';
+  S.sportMatches = getMockSportData(sport);
+  updateSportStats();
+  renderSportResults();
+  document.getElementById('sp-stats').style.display = 'grid';
+  const fb = document.getElementById('sp-filter-bar');
+  if (fb) fb.style.display = 'flex';
+  collectTopRecommendations();
+  toast('Exempeldata laddad — hämta riktiga odds med API-nyckel', 'info');
+}
+
+// Fetch with timeout helper
+async function fetchWithTimeout(url, ms = 8000) {
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), ms);
+  try {
+    const r = await fetch(url, { signal: ctrl.signal });
+    clearTimeout(t);
+    return r;
+  } catch(e) {
+    clearTimeout(t);
+    throw e;
+  }
 }
 
 // =================== FORMAT HELPERS ===================
