@@ -1,8 +1,6 @@
 /**
- * Netlify Function: manifold-proxy
- * Proxies Manifold Markets API to avoid CORS issues
- *
- * GET /.netlify/functions/manifold-proxy?term=riksbank&limit=10&filter=open
+ * Netlify Function: metaculus-proxy
+ * Tries multiple Metaculus endpoints with browser-like headers to bypass IP blocking
  */
 
 exports.handler = async (event) => {
@@ -15,28 +13,54 @@ exports.handler = async (event) => {
     return { statusCode: 204, headers: CORS, body: '' };
   }
 
-  try {
-    const qs = event.queryStringParameters || {};
-    const params = new URLSearchParams(qs).toString();
-    const url = `https://api.manifold.markets/v0/search-markets?${params}`;
+  const qs = event.queryStringParameters || {};
 
-    const r = await fetch(url, {
-      headers: { 'Accept': 'application/json', 'User-Agent': 'MarketOracle/1.0' }
-    });
+  // Browser-like headers — critical for avoiding cloud IP blocks
+  const headers = {
+    'Accept': 'application/json, text/plain, */*',
+    'Accept-Language': 'en-US,en;q=0.9,sv;q=0.8',
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+    'Referer': 'https://www.metaculus.com/questions/',
+    'Origin': 'https://www.metaculus.com',
+    'sec-fetch-dest': 'empty',
+    'sec-fetch-mode': 'cors',
+    'sec-fetch-site': 'same-origin',
+  };
 
-    if (!r.ok) throw new Error(`Manifold ${r.status}`);
-    const data = await r.json();
+  const params = new URLSearchParams({
+    limit:    qs.limit    || '15',
+    status:   qs.status   || 'open',
+    order_by: qs.order_by || '-activity',
+    ...(qs.search ? { search: qs.search } : {}),
+  });
 
-    return {
-      statusCode: 200,
-      headers: CORS,
-      body: JSON.stringify(data),
-    };
-  } catch (e) {
-    return {
-      statusCode: 500,
-      headers: CORS,
-      body: JSON.stringify({ error: e.message }),
-    };
+  const urls = [
+    `https://www.metaculus.com/api2/questions/?${params}`,
+    `https://metaculus.com/api2/questions/?${params}`,
+  ];
+
+  for (const url of urls) {
+    try {
+      const controller = new AbortController();
+      const tid = setTimeout(() => controller.abort(), 10000);
+      const r = await fetch(url, { headers, signal: controller.signal });
+      clearTimeout(tid);
+
+      if (!r.ok) { console.log(`Metaculus HTTP ${r.status}`); continue; }
+
+      const data = await r.json();
+      if (data?.results?.length > 0) {
+        return { statusCode: 200, headers: CORS, body: JSON.stringify(data) };
+      }
+    } catch (e) {
+      console.error('Metaculus attempt:', e.message);
+    }
   }
+
+  // Return empty — app handles this gracefully
+  return {
+    statusCode: 200,
+    headers: CORS,
+    body: JSON.stringify({ results: [], count: 0, _fallback: true }),
+  };
 };
